@@ -1,34 +1,24 @@
 import random
 import katagames_sdk as katasdk
+from pygame.colordict import THECOLORS
+
 
 kataen = katasdk.engine
 pygame = kataen.pygame
 
-from pygame.colordict import THECOLORS
-print(type(THECOLORS))
-cpt=0
-for val,key in THECOLORS.items():
-    print(val, key)
-    cpt += 1
-    if cpt>5:
-        break
 print("welcome!\nPress space to regen squares, mouse to drag n drop some of em")
 
 clock=pygame.time.Clock()
-gameover = False
-#pygame.init()
 kataen.init(kataen.OLD_SCHOOL_MODE)
 screen = kataen.get_screen()
-
 W, H = 960//2,540//2
-# screen = pygame.display.set_mode((W,H))
-
 carres = list()
 assoc_obj_position = dict()
 dragging = None
 movables = set()
 SQ_SIZE=64
 gameover = None
+
 
 def gen_carres():
     global carres, assoc_obj_position, movables, dragging
@@ -41,6 +31,9 @@ def gen_carres():
         if random.random()<0.77:
             if random.random()<0.5:
                 pygame.draw.rect(elt, tmpli[241], ((3,5),(33,15)), 0)
+                tmptmp = pygame.surface.Surface((3,127))
+                tmptmp.fill('purple')
+                elt.blit(tmptmp,(7+random.randint(2,13),random.randint(25,40)))
                 movables.add(elt)
             else:
                 pygame.draw.circle(elt,tmpli[437], (SQ_SIZE//2,SQ_SIZE//2), 21, 7)
@@ -50,6 +43,7 @@ def init_soft():
     global gameover
     gen_carres()
     gameover = False
+
 
 def update_loop():
     global dragging, gameover, carres, assoc_obj_position
@@ -98,4 +92,3 @@ if __name__=='__main__':
     while not gameover:
         update_loop()
     kataen.cleanup()
-    print('bye')

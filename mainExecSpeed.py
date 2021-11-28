@@ -833,10 +833,9 @@ class ParticleSystemTester(Game):
         screen.fill('antiquewhite3')
         particles.draw(screen)
 
-        # TODO fix fps display (KataSDK needs to have Font cls working )
-        # fps = self.get_fps()
+        fps = self.get_fps()
 
-        # self.render_text(screen, f"FPS: {fps:.2f}  Particles: {len(particles)}", size=22)
+        self.render_text(screen, f"FPS: {fps:.2f}  Particles: {len(particles)}", size=22)
 
     def update(self, events, dt):
         pass

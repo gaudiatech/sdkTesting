@@ -1,8 +1,26 @@
 import random
 import katagames_sdk as katasdk
 
-kataen = katasdk.engine
-pygame = kataen.pygame
+if katasdk.VERSION == '0.0.6':
+    import katagames_sdk.engine as kataen
+    pygame = kataen.import_pygame()
+else:
+    kataen = katasdk.engine
+    pygame = kataen.pygame
+
+"""
+--- --- ---
+retro-compatibility support of this test:
+
+         0.0.6    0.0.7
+      --- --- --- --- -
+local |   Y   |   Y    |
+      |       |        |
+      --- --- --- --- -
+ web  |   Y   |   Y    |
+      |       |        |
+      --- --- --- --- -
+"""
 
 # const
 INCREM = 3
@@ -25,8 +43,7 @@ def reroll_static_char():
     txtsurf2 = tmp_font.render(chr(random.randint(97,122)),True, (87,77,115))
 
 
-@katasdk.web_entry_point
-def game_init():
+def _i_game_init():
     global gameover,clock,txt_pos,txtsurf, txtsurf2, screen
     gameover = False
     
@@ -42,13 +59,12 @@ def game_init():
     txt_pos = pygame.math.Vector2()
     txt_pos.x += SCR_W//2
     txt_pos.y += SCR_H//3
-    txtsurf = tmp_font.render('X0é-hi-man', False, '#e9abcc', 'navyblue')
+    txtsurf = tmp_font.render('X0é-hi-man', False, pygame.Color('#e9abcc'), 'navyblue')
     reroll_static_char()
     print('press LEFT/RIGHT key, or SPACE to change txt position')
 
 
-@katasdk.web_animate
-def game_update(infot=None):
+def _i_game_update(infot=None):
     global delta_x, screen, txt_pos, txtsurf, gameover, txtsurf2
 
     for ev in pygame.event.get():
@@ -84,13 +100,31 @@ def game_update(infot=None):
     screen.blit(txtsurf, (txt_pos.x - txtsurf.get_size()[0]//2,txt_pos.y - txtsurf.get_size()[1]//2))
     
     #pygame.display.flip()
-    kataen.display_update()
+    if katasdk.VERSION == '0.0.6':
+        kataen.gfx_updater.display_update()
+    else:
+        kataen.display_update()
+
     clock.tick(MAXFPS)
 
 
 if __name__ == '__main__':
-    game_init()
+    _i_game_init()
     while not gameover:
-        game_update() 
+        _i_game_update() 
     pygame.quit()
     print('bye')
+
+
+if kataen.runs_in_web():
+    if katasdk.version == '0.0.6':
+        def run_game():
+            pt_obj = ParticleSystemTester()
+            pt_obj.start()
+    else:
+        @katasdk.web_entry_point
+        def game_init():
+            _i_game_init()
+        @katasdk.web_animate
+        def game_update(infot=None):
+            _i_game_update(infot)

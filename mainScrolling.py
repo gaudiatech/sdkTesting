@@ -2,6 +2,14 @@ import random
 import katagames_sdk as katasdk
 
 
+
+if katasdk.VERSION == '0.0.6':
+    import katagames_sdk.engine as kataen
+    pygame = kataen.import_pygame()
+else:
+    kataen = katasdk.engine
+    pygame = kataen.pygame
+
 """
 FORK of a work shared by Kyuchumimo#3941
 or maybe Blaatand29#0070 ?
@@ -14,10 +22,19 @@ shared via the pygame community discord server
     ---------------
     Modifications by wkta-tom
 
+--- --- ---
+retro-compatibility support of this test:
+
+         0.0.6    0.0.7
+      --- --- --- --- -
+local |   y   |   Y    |
+      |       |        |
+      --- --- --- --- -
+ web  |   N   |   Y    |
+      |       |        |
+      --- --- --- --- -
 """
 
-kataen = katasdk.engine
-pygame = kataen.pygame
 
 SCR_W,SCR_H, LIM_MAP_X, LIM_MAP_Y= None,None,None,None
 screen = None
@@ -26,8 +43,8 @@ gameover = False
 clock=None
 cam, p = None,None
 
-@katasdk.web_entry_point
-def init_game():
+
+def _i_init_game():
     global SCR_W,SCR_H,screen,info_ft,LIM_MAP_X,LIM_MAP_Y,background,clock,cam,p
     
     kataen.init(kataen.OLD_SCHOOL_MODE)
@@ -56,8 +73,7 @@ def pynative_clip(x, a, b):
     return x
 
 
-@katasdk.web_animate
-def update_game(info_t=None):
+def _i_update_game(info_t=None):
     global gameover,info_ft,SCR_W,SCR_H
 
     for ev in pygame.event.get():
@@ -100,15 +116,29 @@ def update_game(info_t=None):
     screen.blit(info_ft.render("{}, {}".format(cam['x'],cam['y']),False,[255,255,255]),[0,16])
     
     # pygame.display.flip()
-    kataen.display_update()
+    if katasdk.VERSION == '0.0.6':
+        kataen.gfx_updater.display_update()
+    else:
+        kataen.display_update()
     clock.tick(60)
 
 
 # -- entry pt for local execution
 if __name__ == '__main__':
-    init_game()
+    _i_init_game()
     gameover=False
     while not gameover:
-        update_game()
+        _i_update_game()
     kataen.cleanup()
     print('bye!')
+
+
+# /!\ will not run in web ctx for katasdk v0.0.6
+if kataen.runs_in_web():
+    @katasdk.web_entry_point
+    def game_init():
+        _i_init_game()
+    @katasdk.web_animate
+    def game_update(infot=None):
+        _i_update_game(infot)
+

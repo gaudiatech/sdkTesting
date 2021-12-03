@@ -1,4 +1,4 @@
-import katagames_sdk as katasdk
+
 import math
 from math import cos, pi, sin
 from random import choice, gauss, randint, random, uniform
@@ -16,11 +16,30 @@ https://cozyfractal.com) by CozyFractal#6978
 
 Discord Community server:
 https://discord.gg/ZuB2RySPRJ
+
+--- --- ---
+retro-compatibility support of this test:
+
+         0.0.6    0.0.7
+      --- --- --- --- -
+local |   Y   |   Y    |
+      |       |        |
+      --- --- --- --- -
+ web  |   Y   |   Y    |
+      |       |        |
+      --- --- --- --- -
 """
 
+import katagames_sdk as katasdk
+if katasdk.VERSION != '0.0.6':
+    kataen = katasdk.engine
+    pygame = kataen.pygame
 
-kataen = katasdk.engine
-pygame = kataen.pygame
+else:
+    import katagames_sdk.engine as kataen
+    pygame = kataen.import_pygame()
+
+
 EventReceiver = kataen.EventReceiver
 EngineEvTypes = kataen.EngineEvTypes
 
@@ -674,7 +693,6 @@ class Game:
         This method will not exit until the game has finished execution...
         It is NOT used in the web ctx and should never be called
         """
-        assert not kataen.runs_in_web
         
         self.base_pre_update()
         
@@ -846,12 +864,18 @@ if __name__ == '__main__':
     pt_obj = ParticleSystemTester()
     pt_obj.start()
 
+
 # bridge for webctx if the Game cls is used...
-if katasdk.runs_in_web:
-    pt_obj = ParticleSystemTester()
-    @katasdk.web_entry_point
-    def we():
-        pt_obj.base_pre_update()
-    @katasdk.web_animate
-    def wa(infot):
-        pt_obj.update_game(infot)
+if kataen.runs_in_web():
+    if katasdk.version == '0.0.6':
+        def run_game():
+            pt_obj = ParticleSystemTester()
+            pt_obj.start()
+    else:
+        pt_obj = ParticleSystemTester()
+        @katasdk.web_entry_point
+        def we():
+            pt_obj.base_pre_update()
+        @katasdk.web_animate
+        def wa(infot):
+            pt_obj.update_game(infot)

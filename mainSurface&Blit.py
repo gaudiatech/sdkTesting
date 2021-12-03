@@ -1,10 +1,28 @@
 import random
 import katagames_sdk as katasdk
-from pygame.colordict import THECOLORS
 
+"""
+--- --- ---
+retro-compatibility support of this test:
 
-kataen = katasdk.engine
-pygame = kataen.pygame
+         0.0.6    0.0.7
+      --- --- --- --- -
+local |   y   |   Y    |
+      |       |        |
+      --- --- --- --- -
+ web  |   N   |   Y    |
+      |       |        |
+      --- --- --- --- -
+"""
+
+if katasdk.VERSION == '0.0.6':
+    import katagames_sdk.engine as kataen
+    pygame = kataen.import_pygame()
+else:
+    kataen = katasdk.engine
+    pygame = kataen.pygame
+
+THECOLORS = pygame.colordict.THECOLORS
 
 print("welcome!\nPress space to regen squares, mouse to drag n drop some of em")
 
@@ -39,13 +57,13 @@ def gen_carres():
                 pygame.draw.circle(elt,tmpli[437], (SQ_SIZE//2,SQ_SIZE//2), 21, 7)
 
 
-def init_soft():
+def _i_init_soft():
     global gameover
     gen_carres()
     gameover = False
 
 
-def update_loop():
+def _i_update_loop(infot=None):
     global dragging, gameover, carres, assoc_obj_position
     
     for ev in pygame.event.get():
@@ -83,12 +101,27 @@ def update_loop():
             
             screen.blit(elt, pos)
 
+        # pygame.display.flip()
+        if katasdk.VERSION == '0.0.6':
+            kataen.gfx_updater.display_update()
+        else:
+            kataen.display_update()
+        
         clock.tick(60)
-        kataen.display_update()
 
 
 if __name__=='__main__':
-    init_soft()
+    _i_init_soft()
     while not gameover:
-        update_loop()
+        _i_update_loop()
     kataen.cleanup()
+
+
+# /!\ will not run in web ctx for katasdk v0.0.6
+if kataen.runs_in_web():
+    @katasdk.web_entry_point
+    def game_init():
+        _i_init_soft()
+    @katasdk.web_animate
+    def game_update(infot=None):
+        _i_update_loop(infot)

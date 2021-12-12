@@ -236,16 +236,9 @@ class TinyWorldView(EventReceiver):
             pt.x = round(pt.x)
             pt.y = round(pt.y)
         
-        
-        # fix ds 0.0.7 TODO
-        pt_li.reverse()
+        # pt_li.reverse()
         pygame.draw.polygon(surface, self.LINE_COLOR, pt_li, 2)
 
-        # fix ds 0.0.7 TODO
-        #pygame.draw.rect(surface, self.LINE_COLOR, (tuple(temp[0]), (8,8)), 0)
-        
-        #pygame.draw.rect(surface, pygame.Color(self.LINE_COLOR), (tuple(pt_li[0]),(8,8)), 0 )
-        
 
 def print_mini_tutorial():
     howto_infos = """HOW TO PLAY:
@@ -257,7 +250,10 @@ def print_mini_tutorial():
     print('-' * 32)
 
 
-def run_game():
+# ------------
+# -- local run
+# ------------
+if __name__ == '__main__':
     kataen.init(kataen.OLD_SCHOOL_MODE)
     # MVC architecture rocks
     model_objs = [ShipModel(), RocksModel()]
@@ -274,19 +270,21 @@ def run_game():
     kataen.cleanup()
 
 
-if __name__ == '__main__':
-    run_game()
-
-# ----------------------
-# -- web kataSDK0.0.7 --
-# ----------------------
+# ----------------
+# -- web entry pt
+# ----------------
 wanted_mode = None
 game_mger = None
 paint_ev = CgmEvent(kataen.EngineEvTypes.PAINT, screen=None)
 lu_ev = CgmEvent(kataen.EngineEvTypes.LOGICUPDATE, curr_t=None)
+
+
+@katasdk.web_entry_point
 def game_web_ctx():
     global game_mger, wanted_mode,lu_ev
+    wanted_mode = kataen.OLD_SCHOOL_MODE
     kataen.init(wanted_mode)
+    
     # MVC architecture rocks
     model_objs = [ShipModel(), RocksModel()]
     li_recv = [
@@ -300,16 +298,13 @@ def game_web_ctx():
     print_mini_tutorial()
 
     game_mger = kataen.EventManager.instance()
-    #paint_ev.screen=kataen.get_screen()
+    paint_ev.screen=kataen.get_screen()
 
 
-def kata_animate(infot, painting):
+@katasdk.web_animate
+def kata_animate(infot=None):
     global game_mger, paint_ev, lu_ev
     lu_ev.curr_t = infot
     game_mger.post(lu_ev)
-
     game_mger.post(paint_ev)
-    pass
     game_mger.update()
-
-

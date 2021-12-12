@@ -633,9 +633,10 @@ class UniqueRecv(kataen.EventReceiver):
         if ev.type == pygame.MOUSEBUTTONDOWN:
             for _ in range(64):
                 rd_angle = uniform(0, 360)
+                x,y = kataen.proj_to_vscreen(ev.pos)
                 # /!\ need to take care of upscaling x2
                 p = CircleParticle().builder() \
-                    .at((ev.pos[0], ev.pos[1]), rd_angle) \
+                    .at((x,y), rd_angle) \
                     .velocity(gauss(3, 0.33)) \
                     .hsv(rd_angle) \
                     .sized(5) \

@@ -13,7 +13,7 @@ print(pygame.ver)
 fg_elements = list()
 game_over = None
 surf, screen = None, pygame.Surface((0, 0))
-
+offset = 0
 
 @katasdk.web_entry_point
 def init_game():
@@ -24,7 +24,6 @@ def init_game():
     # screen = pygame.display.set_mode((640,480))
     kataen.init(kataen.HD_MODE)
     screen = kataen.get_screen()
-    screen.fill(pygame.color.Color('antiquewhite2'))
 
     # let's create 20 rect objects...
     for rank in range(10):
@@ -38,15 +37,21 @@ def init_game():
 
 @katasdk.web_animate
 def update_game(infot=None):
-    global game_over, screen, fg_elements, surf
+    global game_over, screen, fg_elements, surf, offset
     for ev in pygame.event.get():
         if ev.type == pygame.QUIT:
             game_over = True
-
+        elif ev.type == pygame.KEYDOWN:
+            if ev.key==pygame.K_DOWN:
+                offset+=16
+            elif ev.key == pygame.K_UP:
+                offset-=16
+    
+    screen.fill(pygame.color.Color('antiquewhite2'))
     # it can be drawn
     for elt in fg_elements:
         pygame.draw.rect(screen, pygame.color.Color('aquamarine4'), elt)
-    screen.blit(surf, (640 // 3, 109))
+    screen.blit(surf, (640 // 3, offset+109))
 
     # pygame.display.flip()
     kataen.display_update()

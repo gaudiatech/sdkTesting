@@ -1,6 +1,8 @@
-# TECH-DEMO1.py | revision: oct.07 - 2021
+# TECH-DEMO1.py | revision: FEB 2022
+# first rev. oct.07 - 2021
 # showcases how the Kata engine works
-# (tested with v0.0.6)
+
+# Test pass with KataSDK 0.0.8
 
 # Visit https://kata.games to learn more!
 # source-code by "wkta-tom" | MIT License
@@ -8,23 +10,29 @@
 # https://github.com/wkta
 # thomas@gaudia-tech.com
 
+"""
+Main benefit of this test is testing the emulation/support
+of pygame.math.Vector2
+
+A class that was really hard to emulate!
+"""
+
 import math
 import random
 import katagames_sdk as katasdk
 
-kataen= katasdk.engine
+kataen = katasdk.bootstrap(1)
 
 pygame = kataen.pygame
 # or pygame = kataen.import_pygame()
 
-MyEvTypes = kataen.enum_for_custom_event_types(
+MyEvTypes = kataen.event.enum_custom_ev_types(
     'PlayerChanges',  # contains: newx, newy, angle
 )
 Vector2 = pygame.math.Vector2
-CogObject = kataen.CogObject
-EventReceiver = kataen.EventReceiver
-EngineEvTypes = kataen.EngineEvTypes
-CgmEvent = kataen.CgmEvent
+EventReceiver = kataen.event.EventReceiver
+EngineEvTypes = kataen.event.EngineEvTypes
+CgmEvent = kataen.event.CgmEvent
 
 
 def deg(radvalue):
@@ -36,7 +44,7 @@ class RocksModel:
 
     def __init__(self):
         self.contents = list()
-        self.scr_size = kataen.get_screen().get_size()
+        self.scr_size = kataen.core.get_screen().get_size()
         for i in range(self.INIT_NB):
             rand_pos = [random.randint(0, self.scr_size[0] - 1), random.randint(0, self.scr_size[1] - 1)]
             rand_size = random.randint(8, 55)
@@ -72,14 +80,14 @@ class RocksModel:
             )
 
 
-class ShipModel(CogObject):
+class ShipModel(kataen.event.CogObj):
     DASH_DISTANCE = 55
     DELTA_ANGLE = 0.04
     SPEED_CAP = 192
 
     def __init__(self):
-        super().__init__(explicit_id=1)
-        self.scr_size = kataen.get_screen().get_size()
+        super().__init__(explicit_id=9971)
+        self.scr_size = kataen.core.get_screen().get_size()
         rand_pos = (random.randint(0, self.scr_size[0] - 1), random.randint(0, self.scr_size[1] - 1))
         self._position = Vector2(*rand_pos)
         self._angle = 0
@@ -150,6 +158,7 @@ class ShipModel(CogObject):
         self._commit_new_pos()
 
     def dash(self):
+        print('dashing !')
         tmp = Vector2()
         tmp.from_polar((self.DASH_DISTANCE, deg(self._angle)))
         self._position += tmp
@@ -213,7 +222,7 @@ class TinyWorldView(EventReceiver):
             pygame.draw.circle(refscreen, self.LINE_COLOR, pos, size, 2)
 
     def _draw_player(self, surface):
-        
+
         orientation = -self.curr_angle
         pt_central = self.curr_pos
         a, b, c = Vector2(), Vector2(), Vector2()
@@ -221,21 +230,23 @@ class TinyWorldView(EventReceiver):
         b.from_polar((1, deg(orientation)))
         c.from_polar((1, deg(orientation + (2.0 * math.pi / 3))))
         temp = [a, b, c]
-        
+
         for tv in temp:
             tv.y *= -1
-        temp[0] = (1.2 * self.RAD) *temp[0]
-        temp[1] = (3 * self.RAD) *temp[1]
-        temp[2] = (1.2 * self.RAD) *temp[2]
-        pt_li = [Vector2(*pt_central),
-                 Vector2(*pt_central),
-                 Vector2(*pt_central)]
+        temp[0] = (1.2 * self.RAD) * temp[0]
+        temp[1] = (3 * self.RAD) * temp[1]
+        temp[2] = (1.2 * self.RAD) * temp[2]
+        pt_li = [
+            Vector2(*pt_central),
+            Vector2(*pt_central),
+            Vector2(*pt_central)
+        ]
         for i in range(3):
             pt_li[i] += temp[i]
         for pt in pt_li:
             pt.x = round(pt.x)
             pt.y = round(pt.y)
-        
+
         # pt_li.reverse()
         pygame.draw.polygon(surface, self.LINE_COLOR, pt_li, 2)
 
@@ -254,51 +265,49 @@ def print_mini_tutorial():
 # -- local run
 # ------------
 if __name__ == '__main__':
-    kataen.init(kataen.OLD_SCHOOL_MODE)
+    kataen.core.init('old_school')
     # MVC architecture rocks
     model_objs = [ShipModel(), RocksModel()]
     li_recv = [
         TinyWorldView(*model_objs),
         ShipCtrl(*model_objs),
-        kataen.get_game_ctrl()
+        kataen.core.get_game_ctrl()
     ]
     for recv in li_recv:
         recv.turn_on()
     # launching game
     print_mini_tutorial()
     li_recv[-1].loop()
-    kataen.cleanup()
+    kataen.core.cleanup()
 
-
-# ----------------
-# -- web entry pt
-# ----------------
+# ------------------
+# -- web context run
+# ------------------
 wanted_mode = None
 game_mger = None
-paint_ev = CgmEvent(kataen.EngineEvTypes.PAINT, screen=None)
-lu_ev = CgmEvent(kataen.EngineEvTypes.LOGICUPDATE, curr_t=None)
+paint_ev = CgmEvent(EngineEvTypes.PAINT, screen=None)
+lu_ev = CgmEvent(EngineEvTypes.LOGICUPDATE, curr_t=None)
 
 
 @katasdk.web_entry_point
 def game_web_ctx():
-    global game_mger, wanted_mode,lu_ev
-    wanted_mode = kataen.OLD_SCHOOL_MODE
-    kataen.init(wanted_mode)
-    
+    global game_mger, wanted_mode, lu_ev, model_objs, li_recv
+    wanted_mode = 'old_school'
+    kataen.core.init(wanted_mode)
+    game_mger = kataen.event.EventManager.instance()
+
     # MVC architecture rocks
     model_objs = [ShipModel(), RocksModel()]
     li_recv = [
         TinyWorldView(*model_objs),
         ShipCtrl(*model_objs),
-        kataen.get_game_ctrl()
+        kataen.core.get_game_ctrl()
     ]
-    for recv in li_recv:
-        recv.turn_on()
+    for a_receiver in li_recv:
+        a_receiver.turn_on()
     # launching game
     print_mini_tutorial()
-
-    game_mger = kataen.EventManager.instance()
-    paint_ev.screen=kataen.get_screen()
+    paint_ev.screen = kataen.core.get_screen()
 
 
 @katasdk.web_animate
@@ -308,3 +317,4 @@ def kata_animate(infot=None):
     game_mger.post(lu_ev)
     game_mger.post(paint_ev)
     game_mger.update()
+    kataen.core.display_update()

@@ -6,27 +6,29 @@
 import math
 import random
 import time
-
-import katagames_sdk
 import katagames_sdk as katasdk
 
 
-katagames_sdk.bootstrap(1)
-kataen = katasdk.import_kengi()
+kataen=katasdk.bootstrap(1)
+
 pygame = kataen.pygame
+
+CogObject = kataen.event.CogObj
 EventReceiver = kataen.event.EventReceiver
 EngineEvTypes = kataen.event.EngineEvTypes
+
+music_snd = None
+view = ctrl = None
+Vector2 = pygame.math.Vector2
+MyEvTypes = kataen.event.enum_ev_types(
+    'PlayerChanges',  # contains: new_pos, angle
+)
 
 SCR_SIZE = [0, 0]
 NB_ROCKS = 9
 bullets = list()
 FG_COLOR = (119, 255, 0)
-music_snd = None
-view = ctrl = None
-Vector2 = pygame.math.Vector2
-MyEvTypes = kataen.event.enum_custom_ev_types(
-    'PlayerChanges',  # contains: new_pos, angle
-)
+
 
 
 def deg(radvalue):
@@ -304,6 +306,7 @@ def print_mini_tutorial():
     print('-' * 32)
 
 
+
 class IntroV(EventReceiver):
     def __init__(self):
         super().__init__()
@@ -381,30 +384,3 @@ if __name__ == "__main__":
         update_game()
         kataen.core.display_update()
     kataen.core.cleanup()
-
-# -------------------------
-#  flavor 2
-# -------------------------
-# def run_game():
-#     global SCR_SIZE, view, ctrl
-#     kataen.init(kataen.SUPER_RETRO_MODE)
-#     SCR_SIZE = kataen.get_screen().get_size()
-#     introv = IntroV()
-#     shipm = ShipModel()
-#     li = [RockSprite() for _ in range(NB_ROCKS)]
-#     view = TinyWorldView(shipm, li)
-#     ctrl = ShipCtrl(shipm, li)
-#     view.turn_on()
-#     ctrl.turn_on()
-#     introv.turn_on()
-#     game_ctrl = kataen.get_game_ctrl()
-#     game_ctrl.turn_on()
-#     game_ctrl.loop()
-#     kataen.cleanup()
-#     print('Tech demo for the Kata.games new platform(https://kata.games)')
-#     print('Music by Matthew Pablo')
-#     print('http://www.matthewpablo.com')
-#
-#
-# if __name__ == '__main__':
-#     run_game()

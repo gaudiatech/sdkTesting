@@ -1,0 +1,62 @@
+{
+  "vmlib_ver": "25_1a1",
+  "dependencies": {
+    "pyved_engine": [
+      "25_1a1",
+      "pyv"
+    ]
+  },
+  "description": "this is a placeholder so you can describe your game",
+  "author": "Richard Jones, Renfred Harper, Thomas I. Eder",
+  "asset_list": [
+    "effect-dust_001.png",
+    "effect-explosion_001.png",
+    "effect-explosion_002.png",
+    "effect-explosion_003.png",
+    "effect-explosion_004.png",
+    "gui-healthbar_001.png",
+    "gui-health_001.png",
+    "spr-battery_001.png",
+    "spr-bomb_001.png",
+    "spr-bullet_001.png",
+    "spr-bullet_002.png",
+    "spr-bullet_003.png",
+    "spr-buzzard_001.png",
+    "spr-heart_001.png",
+    "spr-hero_001.png",
+    "spr-spread_001.png",
+    "spr-victory_001.png",
+    "spr-walker_001.png",
+    "title_001.png"
+  ],
+  "asset_base_folder": "graphics",
+  "sound_base_folder": ".",
+  "sound_list": [],
+  "data_files": [],
+  "slug": "JetpackCaverns",
+  "title": "JetpackCaverns",
+  "thumbnail512x384": "thumb_2.png",
+  "thumbnail512x512": "thumb_1.png",
+  "ktg_services": false,
+  "instructions": "not provided",
+  "uses_challenge": false,
+  "has_game_server": false,
+  "ncr_faucet": false,
+  "game_genre": [
+    "Action",
+    "Platformer"
+  ],
+  "build_date": "Mon Jan 27 12:24:18 2025",
+  "source_files": [
+    "animation.py",
+    "audio.py",
+    "entity.py",
+    "gamedef.py",
+    "glvars.py",
+    "hud.py",
+    "maptools.py",
+    "rumble.py",
+    "scene.py",
+    "tmx.py"
+  ]
+}

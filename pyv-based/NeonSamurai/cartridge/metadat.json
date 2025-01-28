@@ -1,0 +1,63 @@
+{
+  "vmlib_ver": "25_1a1",
+  "dependencies": {
+    "pyved_engine": [
+      "25_1a1",
+      "pyv"
+    ]
+  },
+  "description": "cool combat game",
+  "author": "moonbak & severino",
+  "asset_list": [
+    "GreatSwordKnight_2hIdle5_dir1.json",
+    "GreatSwordKnight_2hIdle5_dir2.json",
+    "GreatSwordKnight_2hIdle5_dir3.json",
+    "GreatSwordKnight_2hIdle5_dir4.json",
+    "GreatSwordKnight_2hIdle5_dir5.json",
+    "GreatSwordKnight_2hIdle5_dir6.json",
+    "GreatSwordKnight_2hIdle5_dir7.json",
+    "GreatSwordKnight_2hIdle5_dir8.json",
+
+    "GreatSwordKnight_2hWalk_dir1.json",
+    "GreatSwordKnight_2hWalk_dir2.json",
+    "GreatSwordKnight_2hWalk_dir3.json",
+    "GreatSwordKnight_2hWalk_dir4.json",
+    "GreatSwordKnight_2hWalk_dir5.json",
+    "GreatSwordKnight_2hWalk_dir6.json",
+    "GreatSwordKnight_2hWalk_dir7.json",
+    "GreatSwordKnight_2hWalk_dir8.json",
+
+    "lion.png",
+    "pokerchips.json",
+    "pokerchips.png",
+
+    "samurai_tileset.json"
+  ],
+  "asset_base_folder": "graphics",
+  "sound_base_folder": "audio",
+  "sound_list": [
+    "Fear-CCC.ogg",
+    "sfx_drop.wav",
+    "woosh.wav"
+  ],
+  "data_files": [],
+  "slug": "NeonSamurai",
+  "title": "NeonSamurai",
+  "thumbnail512x384": "thumb_2.png",
+  "thumbnail512x512": "thumb_1.png",
+  "ktg_services": false,
+  "instructions": "not provided",
+  "uses_challenge": false,
+  "has_game_server": false,
+  "ncr_faucet": false,
+  "game_genre": [
+    "Arcade",
+    "Action"
+  ],
+  "build_date": "Tue Jan 28 11:32:57 2025",
+  "source_files": [
+    "actors.py",
+    "gamedef.py",
+    "glvars.py"
+  ]
+}

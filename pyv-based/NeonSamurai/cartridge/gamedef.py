@@ -7,21 +7,35 @@ from .actors.misc import new_solid_background, new_color_viewer, new_movable_rec
 
 pyv.bootstrap_e()
 
-# gl. vars
-pressed_keys = set()
-last_nb_keys = 0
-timer_active = False
-
-# const.
+# program constants
+DEFAULT_SETTINGS = {
+    'keyup': pyv.evsys0.K_UP,
+    'keydown': pyv.evsys0.K_DOWN,
+    'keyright': pyv.evsys0.K_RIGHT,
+    'keyleft': pyv.evsys0.K_LEFT
+}
+AZERTY_SETTINGS = {
+    'keyup': pyv.evsys0.K_z,
+    'keydown': pyv.evsys0.K_s,
+    'keyright': pyv.evsys0.K_d,
+    'keyleft': pyv.evsys0.K_q
+}
 VALID_EVENTS = (
     'new_nb_pressed_keys', 'timer_start', 'timer_stop', 'color_change', 'av_input'
 )
+
+# global vars
+pressed_keys = set()
+last_nb_keys = 0
+timer_active = False
+# settings = AZERTY_SETTINGS
+settings = DEFAULT_SETTINGS
 
 
 # -----
 #  declare the 3 main functions (mandatory)
 def init(vmst=None):
-    pyv.init(mode=pyv.LOW_RES_MODE, wcaption='Neon Samurai Tech Demo')
+    pyv.init(mode=pyv.HIGH_RES_MODE, wcaption='Neon Samurai Tech Demo')
     # declare your custom events here
     pyv.declare_evs(*VALID_EVENTS)
 
@@ -69,33 +83,35 @@ def update(time_info=None):
                     timer_active = False
             elif ev.key == pyv.evsys0.K_SPACE:
                 pyv.post_ev('color_change')
-            elif ev.key == pyv.evsys0.K_UP:
+            elif ev.key == settings['keyup']:
                 pyv.post_ev('av_input', k='up_pressed')
-            elif ev.key == pyv.evsys0.K_DOWN:
+            elif ev.key == settings['keydown']:
                 pyv.post_ev('av_input', k='down_pressed')
-            elif ev.key == pyv.evsys0.K_RIGHT:
+            elif ev.key == settings['keyright']:
                 pyv.post_ev('av_input', k='right_pressed')
-            elif ev.key == pyv.evsys0.K_LEFT:
+            elif ev.key == settings['keyleft']:
                 pyv.post_ev('av_input', k='left_pressed')
                 print('-->left pressed')
 
         elif ev.type == pyv.evsys0.KEYUP:
             pressed_keys.remove(ev.key)
             mapping = {
-                pyv.evsys0.K_UP: 'up_released',
-                pyv.evsys0.K_DOWN: 'down_released',
-                pyv.evsys0.K_RIGHT: 'right_released',
-                pyv.evsys0.K_LEFT: 'left_released'
+                settings['keyup']: 'up_released',
+                settings['keydown']: 'down_released',
+                settings['keyright']: 'right_released',
+                settings['keyleft']: 'left_released'
             }
             if ev.key in mapping:
                 pyv.post_ev('av_input', k=mapping[ev.key])
 
     # <>
     # logic update
-    if last_nb_keys is None or len(pressed_keys) != last_nb_keys:  # only if smth changed
-        new_nb = len(pressed_keys)
-        pyv.post_ev('new_nb_pressed_keys', nb=new_nb)  # we forward how many keys are pressed now
-        last_nb_keys = new_nb
+
+    # disable this
+    # if last_nb_keys is None or len(pressed_keys) != last_nb_keys:  # only if smth changed
+    #     new_nb = len(pressed_keys)
+    #     pyv.post_ev('new_nb_pressed_keys', nb=new_nb)  # we forward how many keys are pressed now
+    #     last_nb_keys = new_nb
     pyv.post_ev('update', curr_t=time_info)
 
     # <>

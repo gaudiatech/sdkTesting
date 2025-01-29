@@ -1,126 +1,20 @@
 import math
 from random import randint, choice
 
-# from pygame import *
+import pyved_engine as pyv
 
-from . import audio
 from . import maptools
-from . import rumble
 from . import scene
-import pygame
+from .core import audio
+from .core import rumble
+from .core.BaseEntity import BaseEntity, FRICTION, TERMINAL
 
-GRAVITY = 0.025
-TERMINAL = 2
-FRICTION = 0.95
-
-'''
-Entities ---------------------------------------------------------------------
-'''
+pygame = pyv.pygame
 
 
-class Entity(pygame.sprite.Sprite):
+class Player(BaseEntity):
     def __init__(self, game, position, *groups):
-        pygame.sprite.Sprite.__init__(self, *groups)
-        self.xpos = position[0]
-        self.ypos = position[1]
-        self.xvel = 0
-        self.yvel = 0
-        self.ani_state = 0
-        self.ani_tick = 0
-        self.ani_speed = 0
-        self.flying = False
-        self.heavy = False
-        self.bounce = False
-
-    def animate(self, game):
-        self.ani_tick += 1
-        if self.ani_tick > self.ani_speed:
-            self.ani_tick = 0
-            self.ani_state += 1
-            if self.ani_state >= len(self.animation.frames[0]):
-                self.ani_state = 0
-        self.image = self.animation.frames[0][self.ani_state]
-
-    def update(self, game):
-        self.xpos += self.xvel
-        self.hitbox.centerx = self.xpos
-        if self.xpos > game.scene.tilemap.px_width - 1:
-            self.xpos = game.scene.tilemap.px_width - 1
-        if self.xpos < 0:
-            self.xpos = 0
-        if self.xvel > 0:
-            self.hitbox.x += 1
-        elif self.xvel < 0:
-            self.hitbox.x -= 1
-        self.collide(game, self.xvel, 0)
-
-        if not self.flying:
-            if isinstance(self, PowerUp):
-                self.yvel += GRAVITY / 10
-            else:
-                self.yvel += GRAVITY
-        if self.heavy:
-            self.yvel += GRAVITY * 3
-        if isinstance(self, Player):
-            if game.down:
-                mv = self.max_velocity
-            else:
-                mv = 0
-            if self.yvel > TERMINAL + mv:
-                self.yvel = TERMINAL + mv
-        self.ypos += self.yvel
-        self.hitbox.centery = self.ypos
-        if self.ypos > game.scene.tilemap.px_height - 1:
-            self.ypos = game.scene.tilemap.px_height - 1
-        if self.ypos < 0:
-            self.ypos = 0
-        if self.yvel > 0:
-            self.hitbox.y += 1
-        elif self.yvel < 0:
-            self.hitbox.y -= 1
-        self.collide(game, 0, self.yvel)
-        self.rect.center = self.hitbox.center
-
-    def collide(self, game, xvel, yvel):
-        if isinstance(self, Battery):
-            return
-        elif isinstance(self, PowerUp):
-            if self.hitbox.colliderect(game.scene.player.hitbox):
-                self.pickup(game)
-                return
-        elif isinstance(self, Enemy):
-            if self.hitbox.colliderect(game.scene.player.hitbox):
-                game.scene.player.damage(game, 2)
-        for cell in game.scene.tilemap.layers['lower'].collide(self.hitbox, 'barrier'):
-            if xvel > 0:
-                self.hitbox.right = cell.left
-                self.xpos = self.hitbox.centerx
-                if self.bounce:
-                    self.xvel *= -1
-                else:
-                    xvel = 0
-            elif xvel < 0:
-                self.hitbox.left = cell.right
-                self.xpos = self.hitbox.centerx
-                if self.bounce:
-                    self.xvel *= -1
-                else:
-                    self.xvel = 0
-            if yvel > 0:
-                self.hitbox.bottom = cell.top
-                self.ypos = self.hitbox.centery
-                self.yvel = 0
-                if isinstance(self, PowerUp):
-                    self.oscillating = False
-            elif yvel < 0:
-                self.hitbox.top = cell.bottom
-                self.ypos = self.hitbox.centery
-                self.yvel = 0
-
-
-class Player(Entity):
-    def __init__(self, game, position, *groups):
-        Entity.__init__(self, game, position, *groups)
+        BaseEntity.__init__(self, game, position, *groups)
         # self.image = Surface((16,16)).convert()
         # self.image.fill((255,0,0))
         self.animation = game.graphics['sprite_hero_001']
@@ -138,6 +32,7 @@ class Player(Entity):
         self.flashing = 0
         self.spread = 0
         self.grenade = 0
+        self.etype = 'player'
 
     def damage(self, game, amount):
         if not self.flashing:
@@ -292,13 +187,13 @@ class Player(Entity):
             energy = energy // 10
             Bomb(game, (self.xpos, self.ypos), game.scene.behind, energy=energy)
             self.charge = 0
-        Entity.update(self, game)
+        BaseEntity.update(self, game)
         self.animate(game)
 
 
-class Bullet(Entity):
+class Bullet(BaseEntity):
     def __init__(self, game, position, *groups, angle=270, velocity=6, owner='player'):
-        Entity.__init__(self, game, position, *groups)
+        BaseEntity.__init__(self, game, position, *groups)
         if owner == 'enemy':
             self.animation = game.graphics['sprite_bullet_003']
         else:
@@ -313,7 +208,7 @@ class Bullet(Entity):
         self.owner = owner
 
     def update(self, game):
-        # Entity.update(self, game)
+        # BaseEntity.update(self, game)
         self.xpos += self.xvel
         self.ypos += self.yvel
         self.hitbox.center = (self.xpos, self.ypos)
@@ -382,9 +277,9 @@ class Bullet(Entity):
         self.kill()
 
 
-class Bomb(Entity):
+class Bomb(BaseEntity):
     def __init__(self, game, position, *groups, energy=0, angle=270):
-        Entity.__init__(self, game, position, *groups)
+        BaseEntity.__init__(self, game, position, *groups)
         # self.image = Surface((4,4)).convert()
         # self.image.fill((0,255,255))
         self.animation = game.graphics['sprite_bullet_001']
@@ -403,10 +298,10 @@ class Bomb(Entity):
     def animate(self, game):
         Effect(game, self.rect.center, 'effect_explosion_003', game.scene.behind, stationary=False,
                angle=int(self.angle + 180))
-        Entity.animate(self, game)
+        BaseEntity.animate(self, game)
 
     def update(self, game):
-        # Entity.update(self, game)
+        # BaseEntity.update(self, game)
         if self.energy <= 0:
             self.kill()
         self.xpos += self.xvel
@@ -495,9 +390,9 @@ class Spawner():
             self.currentspawn = 0
 
 
-class Enemy(Entity):
+class Enemy(BaseEntity):
     def __init__(self, game, position, spawner, *groups):
-        Entity.__init__(self, game, position, *groups)
+        BaseEntity.__init__(self, game, position, *groups)
         self.spawner = spawner
         self.current_behavior = 0
         self.behavior = []
@@ -505,6 +400,7 @@ class Enemy(Entity):
         self.offscreen = False
         self.flying = False
         self.power = 0
+        self.etype = 'enemy'
         if self.spawner:
             self.spawner.children.append(self)
 
@@ -564,7 +460,7 @@ class Enemy(Entity):
                     self.current_behavior += 1
 
     def animate(self, game):
-        Entity.animate(self, game)
+        BaseEntity.animate(self, game)
         flashcolor = (0, 0, 0)
         if self.flashing:
             if self.flashing % 2:
@@ -580,7 +476,7 @@ class Enemy(Entity):
     def update(self, game):
         if self.behavior:
             self.execute_behavior(game)
-        Entity.update(self, game)
+        BaseEntity.update(self, game)
         self.animate(game)
 
 
@@ -600,6 +496,7 @@ class Battery(Enemy):
         self.velocity = 0
         self.max_velocity = 0
         self.acceleration = 0
+        self.etype = 'battery'
 
     def destroy(self, game):
         Enemy.destroy(self, game)
@@ -650,13 +547,14 @@ Powerups --------------------------------------------------------------------
 '''
 
 
-class PowerUp(Entity):
+class PowerUp(BaseEntity):
     def __init__(self, game, position, *groups):
-        Entity.__init__(self, game, position, *groups)
+        BaseEntity.__init__(self, game, position, *groups)
         self.ani_speed = 8
         self.duration = 720
         self.oscillate = 0
         self.oscillating = True
+        self.etype = 'power_up'
 
     def update(self, game):
         if self.oscillating:
@@ -664,7 +562,7 @@ class PowerUp(Entity):
             self.xvel = math.sin(math.radians(self.oscillate)) / 2
         else:
             self.xvel = 0
-        Entity.update(self, game)
+        BaseEntity.update(self, game)
         self.duration -= 1
         if self.duration == 0:
             self.kill()
@@ -734,10 +632,10 @@ Effects ----------------------------------------------------------------------
 '''
 
 
-class Effect(Entity):
+class Effect(BaseEntity):
     def __init__(self, game, position, animation, *groups, repeat=False, flip=False, variance=45, stationary=False,
                  speed=1, angle=0):
-        Entity.__init__(self, game, position, *groups)
+        BaseEntity.__init__(self, game, position, *groups)
         self.repeat = repeat
         self.ani_speed = speed
         self.animation = game.graphics[animation]
@@ -755,7 +653,7 @@ class Effect(Entity):
         self.xvel, self.yvel = get_vector(self.angle, self.velocity)
 
     def animate(self, game):
-        Entity.animate(self, game)
+        BaseEntity.animate(self, game)
         if not self.repeat:
             if not self.ani_state and not self.ani_tick:
                 self.kill()

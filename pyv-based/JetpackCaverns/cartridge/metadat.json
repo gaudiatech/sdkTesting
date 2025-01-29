@@ -30,8 +30,28 @@
     "title_001.png"
   ],
   "asset_base_folder": "graphics",
-  "sound_base_folder": ".",
-  "sound_list": [],
+  "sound_base_folder": "audio_assets",
+  "sound_list": [
+	"explosion_001.wav",
+	"explosion_002.wav",
+	"explosion_003.wav",
+
+	"impact_001.wav",
+	"impact_002.wav",
+	"impact_003.wav",
+	"impact_004.wav",
+	"impact_005.wav",
+
+	"shoot_001.wav",
+	"shoot_002.wav",
+	"shoot_003.wav",
+	"shoot_004.wav",
+
+	"heart_001.wav",
+	"hurt_001.wav",
+	"powerup_001.wav",
+	"thrust_001.wav"
+  ],
   "data_files": [],
   "slug": "JetpackCaverns",
   "title": "JetpackCaverns",

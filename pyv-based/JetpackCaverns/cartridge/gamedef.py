@@ -1,13 +1,12 @@
-import os
 import pyved_engine as pyv
 
-# import pygame as pg
-# from pygame import *
-
-from . import animation
-from . import scene as scene_module
 
 pyv.bootstrap_e()
+
+
+from .core import animation
+from . import scene as scene_module
+
 pygame = pyv.pygame
 image = pygame.image
 mixer = pygame.mixer
@@ -18,11 +17,11 @@ class Game:
     def __init__(self):
         self.load_settings()
         self.scalar = int(self.settings['resolution'][0] / self.settings['screenbuffer'][0])
-        self.video_init()  # also inits pyved
+
+        # deprec-
+        # self.video_init()
         self.input_init()
         self.music = None
-
-        self.gameover = False
 
         # MANDATORY! Otherwise we cant play sprite animations
         self.frame_counter = 1
@@ -83,30 +82,9 @@ class Game:
             else:
                 self.settings[setting[0]] = setting[1]
 
-    def video_init(self):
-        # - deprecated code (pre-pyved port)
-        # os.environ['SDL_VIDEO_CENTERED'] = '1'
-        # pg.init()
-        size = self.settings['resolution']
-        # flags = 0
-        # if self.settings['borderless']:
-        #     flags = NOFRAME
-        # if self.settings['fullscreen']:
-        #     flags = FULLSCREEN | HWSURFACE
-        # depth = self.settings['depth']
-        # self.screen = display.set_mode(size, flags, depth)
-        # self.screenbuffer = Surface(self.settings['screenbuffer']).convert()
-        pyv.init(mode=0, forced_size=size)
-        self.screen= pyv.vars.screen
-
-        # self.screenbuffer = pygame.surface.Surface(self.settings['screenbuffer']).convert()
-
-        # debug how pygame has initialized the display sub-module
-        # print(display.Info())
-
     def input_init(self):
         mouse.set_visible(True)
-        self.mouse_pos = mouse.get_pos()
+        self.mouse_pos = pyv.get_mouse_coords()
         self.leftclick = False
         self.leftmouse = False
         self.rightclick = False
@@ -117,13 +95,14 @@ class Game:
         self.down = False
 
     def input(self):
-        self.mouse_pos = mouse.get_pos()
-        self.mouse_pos = (int(self.mouse_pos[0] / self.scalar), int(self.mouse_pos[1] / self.scalar))
+        self.mouse_pos = pyv.get_mouse_coords()  # mouse.get_pos()
+        # -deprec
+        # self.mouse_pos = (int(self.mouse_pos[0] / self.scalar), int(self.mouse_pos[1] / self.scalar))
         self.rightclick = False
         self.leftclick = False
         for e in pyv.evsys0.get():
             if e.type == pyv.evsys0.QUIT:
-                self.quit()
+                pyv.vars.gameover = True
             if e.type == pyv.evsys0.KEYDOWN:
                 if e.key == pyv.evsys0.K_ESCAPE:
                     self.reset()
@@ -159,20 +138,19 @@ class Game:
                     if self.rightmouse:
                         self.rightclick = True
                     self.rightmouse = False
-
                 pyv.evsys0.event.set_grab(0)  # TODO same as before
 
     def reset(self):
         if isinstance(self.scene, scene_module.TitleScreen):
-            self.quit()
+            self.haltgame()
         else:
             self.scenes = [scene_module.TitleScreen(self)]
 
-    def quit(self):
+    def haltgame(self):
         self.screen.fill((0, 0, 0))
         pyv.flip()
         # display.flip()
-        self.gameover = True
+        pyv.vars.gameover = True
 
     #def execute_scene(self):
     #    self.now = pygame.time.get_ticks()
@@ -246,25 +224,28 @@ def load_graphics(g_ref: Game):
     }
 
 
-def load_sounds(g_ref: Game):
-    g_ref.sounds = {
-        'sfx_explosion_001': mixer.Sound('audio/sfx/explosion_001.wav'),
-        'sfx_explosion_002': mixer.Sound('audio/sfx/explosion_002.wav'),
-        'sfx_explosion_003': mixer.Sound('audio/sfx/explosion_003.wav'),
-        'sfx_heart_001': mixer.Sound('audio/sfx/heart_001.wav'),
-        'sfx_hurt_001': mixer.Sound('audio/sfx/hurt_001.wav'),
-        'sfx_impact_001': mixer.Sound('audio/sfx/impact_001.wav'),
-        'sfx_impact_002': mixer.Sound('audio/sfx/impact_002.wav'),
-        'sfx_impact_003': mixer.Sound('audio/sfx/impact_003.wav'),
-        'sfx_impact_004': mixer.Sound('audio/sfx/impact_004.wav'),
-        'sfx_impact_005': mixer.Sound('audio/sfx/impact_005.wav'),
-        'sfx_powerup_001': mixer.Sound('audio/sfx/powerup_001.wav'),
-        'sfx_shoot_001': mixer.Sound('audio/sfx/shoot_001.wav'),
-        'sfx_shoot_002': mixer.Sound('audio/sfx/shoot_002.wav'),
-        'sfx_shoot_003': mixer.Sound('audio/sfx/shoot_003.wav'),
-        'sfx_shoot_004': mixer.Sound('audio/sfx/shoot_004.wav'),
-        'sfx_thrust_001': mixer.Sound('audio/sfx/thrust_001.wav'),
-    }
+"""
+-deprec:
+used to be member of the class 'Game'
+def video_init(self):
+    # - deprecated code (pre-pyved port)
+    # os.environ['SDL_VIDEO_CENTERED'] = '1'
+    # pg.init()
+    size = self.settings['resolution']
+    # flags = 0
+    # if self.settings['borderless']:
+    #     flags = NOFRAME
+    # if self.settings['fullscreen']:
+    #     flags = FULLSCREEN | HWSURFACE
+    # depth = self.settings['depth']
+    # self.screen = display.set_mode(size, flags, depth)
+    # self.screenbuffer = Surface(self.settings['screenbuffer']).convert()
+    pyv.init(mode=0, forced_size=size)
+    self.screen = pyv.vars.screen
+    # self.screenbuffer = pygame.surface.Surface(self.settings['screenbuffer']).convert()
+    # debug how pygame has initialized the display sub-module
+    # print(display.Info())
+"""
 
 
 g_obj = None
@@ -272,9 +253,35 @@ g_obj = None
 
 def init(vm_state):
     global g_obj
+    pyv.init(pyv.RETRO_MODE)
     g_obj = Game()
+    g_obj.screen = pyv.vars.screen
+
+    # - bind graphics
     load_graphics(g_obj)
-    load_sounds(g_obj)
+    # - bind sounds to game
+    g_obj.sounds = {
+        'sfx_explosion_001': pyv.vars.sounds['explosion_001'],
+        'sfx_explosion_002': pyv.vars.sounds['explosion_002'],
+        'sfx_explosion_003': pyv.vars.sounds['explosion_003'],
+
+        'sfx_impact_001': pyv.vars.sounds['impact_001'],
+        'sfx_impact_002': pyv.vars.sounds['impact_002'],
+        'sfx_impact_003': pyv.vars.sounds['impact_003'],
+        'sfx_impact_004': pyv.vars.sounds['impact_004'],
+        'sfx_impact_005': pyv.vars.sounds['impact_005'],
+
+        'sfx_shoot_001': pyv.vars.sounds['shoot_001'],
+        'sfx_shoot_002': pyv.vars.sounds['shoot_002'],
+        'sfx_shoot_003': pyv.vars.sounds['shoot_003'],
+        'sfx_shoot_004': pyv.vars.sounds['shoot_004'],
+
+        'sfx_heart_001': pyv.vars.sounds['heart_001'],
+        'sfx_hurt_001': pyv.vars.sounds['hurt_001'],
+        'sfx_powerup_001': pyv.vars.sounds['powerup_001'],
+        'sfx_thrust_001': pyv.vars.sounds['thrust_001']
+    }
+
     g_obj.scenes = [
         scene_module.TitleScreen(g_obj)
     ]
@@ -282,14 +289,15 @@ def init(vm_state):
 
 
 def update(t_info):
-    while not g_obj.gameover:
+    if pyv.vars.gameover:
+        g_obj.haltgame()
+    else:
         scene_done = False
         g_obj.scene = g_obj.scenes[-1]
 
         # this line has been removed,
         #  since pyv.flip already handles the frame rate control
         # ticker = self.clock.tick_busy_loop(self.fps)
-
         # debug info removed as well
         # self.frame_counter += 1
         # if self.frame_counter > self.fps:
@@ -299,22 +307,12 @@ def update(t_info):
         if not g_obj.pause:
             scene_done = g_obj.scene.update(g_obj)
         g_obj.scene.render(g_obj)
-        pyv.flip()
+
         # pygame.display.update()
         if scene_done:
             g_obj.scenes.remove(g_obj.scene)
-    else:
-        g_obj.quit()
+    pyv.flip()
 
 
 def close(vm_state):
-    pyv.quit()  # pg.quit()
-
-
-# since we're using the launcher you must not
-# use your own game loop...
-
-# init()
-# while True:
-#     update(0.0)
-# close()
+    pyv.quit()

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="20" height="30" tilewidth="16" tileheight="16">
  <tileset firstgid="1" name="stage_001" tilewidth="16" tileheight="16">
-  <image source="cartridge/graphics/tiles/stage_001.png" width="128" height="256"/>
+  <image source="graphics/tiles/stage_001.png" width="128" height="256"/>
   <tile id="0">
    <properties>
     <property name="sky" value="1"/>
